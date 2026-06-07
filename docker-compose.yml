@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Redis 缓存与限流
+  redis:
+    image: redis:7-alpine
+    container_name: ai-starter-redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ai-network
+
+  # 后端网关
+  backend:
+    build: .
+    container_name: ai-starter-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SPRING_PROFILES_ACTIVE=prod
+    depends_on:
+      - redis
+    networks:
+      - ai-network
+
+  # 前端管理后台
+  frontend:
+    build: ./frontend
+    container_name: ai-starter-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8080/api/v1
+    depends_on:
+      - backend
+    networks:
+      - ai-network
+
+networks:
+  ai-network:
+    driver: bridge

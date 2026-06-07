@@ -1,0 +1,68 @@
+spring:
+  application:
+    name: enterprise-java-ai-starter
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      lettuce:
+        pool:
+          max-active: 20
+          max-idle: 10
+
+# Resilience4j 默认配置
+resilience4j:
+  circuitbreaker:
+    configs:
+      default:
+        registerHealthIndicator: true
+        slidingWindowSize: 10
+        minimumNumberOfCalls: 5
+        permittedNumberOfCallsInHalfOpenState: 3
+        waitDurationInOpenState: 10s
+        failureRateThreshold: 50
+        slowCallRateThreshold: 50
+        slowCallDurationThreshold: 3000ms
+        recordExceptions:
+          - org.springframework.web.reactive.function.client.WebClientResponseException
+          - java.util.concurrent.TimeoutException
+          - com.enterprise.ai.starter.core.exception.ModelProviderException
+
+app:
+  ai:
+    ratelimit:
+      default-capacity: 20
+      default-rate: 5
+    channels:
+      - id: "ch-mock"
+        name: "测试 Mock 渠道"
+        provider: MOCK
+        apiKey: "none"
+        modelName: "mock-model"
+        weight: 100
+        priority: 1
+        isEnabled: true
+        timeoutMillis: 5000
+      - id: "ch-001"
+        name: "主用 OpenAI"
+        provider: OPENAI
+        apiKey: "sk-xxx"
+        modelName: "gpt-4-turbo"
+        weight: 80
+        priority: 1
+        isEnabled: true
+        timeoutMillis: 30000
+      - id: "ch-002"
+        name: "备用 DeepSeek"
+        provider: DEEPSEEK
+        apiKey: "sk-yyy"
+        baseUrl: "https://api.deepseek.com"
+        modelName: "deepseek-chat"
+        weight: 20
+        priority: 1
+        isEnabled: true
+        timeoutMillis: 30000
+
+logging:
+  level:
+    com.enterprise.ai.starter: DEBUG
